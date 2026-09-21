@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raksha — Emergency & Disaster Management System</title>
+  
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS for Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body class="theme-dark">
+  <!-- Top Priority Navigation Header -->
+  <header class="top-nav">
+    <div class="nav-brand">
+      <div class="brand-logo-wrap">
+        <div class="radar-pulse"></div>
+        <i data-lucide="shield-alert" class="brand-icon"></i>
+      </div>
+      <div>
+        <div class="brand-title">Raksha</div>
+        <div class="brand-subtitle">Disaster & Emergency Response Grid</div>
+      </div>
+    </div>
+
+    <!-- Role / View Switcher Tabs -->
+    <nav class="nav-tabs" id="navTabs">
+      <button class="nav-btn active" data-view="citizenView">
+        <i data-lucide="alert-triangle"></i>
+        <span>Citizen SOS</span>
+      </button>
+      <button class="nav-btn" data-view="ambulanceView">
+        <i data-lucide="ambulance"></i>
+        <span>Ambulance EMT</span>
+      </button>
+      <button class="nav-btn" data-view="hospitalView">
+        <i data-lucide="hospital"></i>
+        <span>Hospital ER & Blood</span>
+      </button>
+      <button class="nav-btn" data-view="doctorView">
+        <i data-lucide="stethoscope"></i>
+        <span>Doctor Portal</span>
+      </button>
+      <button class="nav-btn" data-view="organView">
+        <i data-lucide="heart-handshake"></i>
+        <span>Organ Corridor</span>
+      </button>
+      <button class="nav-btn" data-view="trafficView">
+        <i data-lucide="route"></i>
+        <span>Traffic Green Corridor</span>
+      </button>
+      <button class="nav-btn" data-view="rxDecoderView">
+        <i data-lucide="file-heart"></i>
+        <span>Rx & Jargon Decoder</span>
+      </button>
+      <button class="nav-btn" data-view="triageView">
+        <i data-lucide="clipboard-pulse"></i>
+        <span>Disaster Triage</span>
+      </button>
+    </nav>
+
+    <div class="nav-status">
+      <div class="live-pill">
+        <span class="live-dot"></span>
+        <span>GRID ACTIVE</span>
+      </div>
+      <div id="liveClock" class="live-clock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- ================= UNIFIED 3-PORTAL COMMAND SUITE ================= -->
+  <div class="portal-selector-bar">
+    <div class="portal-brand-tag">
+      <span class="pulse-indicator"></span>
+      <span class="portal-tag-label">RESQNET 3-PORTAL SUITE:</span>
+    </div>
+
+    <div class="portal-switch-buttons">
+      <button id="portalBtn-patient" class="portal-nav-btn active" onclick="switchPortal('patient')">
+        <span class="portal-icon-box patient-icon"><i data-lucide="user"></i></span>
+        <div class="portal-btn-content">
+          <span class="portal-btn-title">PATIENT PORTAL</span>
+          <span class="portal-btn-subtitle" id="patientPortalSub">Aarav Sharma &bull; Blood O-</span>
+        </div>
+      </button>
+
+      <button id="portalBtn-doctor" class="portal-nav-btn" onclick="switchPortal('doctor')">
+        <span class="portal-icon-box doctor-icon"><i data-lucide="stethoscope"></i></span>
+        <div class="portal-btn-content">
+          <span class="portal-btn-title">DOCTOR PORTAL</span>
+          <span class="portal-btn-subtitle" id="doctorPortalSub">Dr. Ananya &bull; Trauma Surgery</span>
+        </div>
+      </button>
+
+      <button id="portalBtn-ambulance" class="portal-nav-btn" onclick="switchPortal('ambulance')">
+        <span class="portal-icon-box ambulance-icon"><i data-lucide="ambulance"></i></span>
+        <div class="portal-btn-content">
+          <span class="portal-btn-title">AMBULANCE PORTAL</span>
+          <span class="portal-btn-subtitle" id="ambulancePortalSub">Alpha-1 &bull; Paramedic ALS</span>
+        </div>
+      </button>
+    </div>
+
+    <div class="portal-auth-controls">
+      <div class="auth-user-pill" id="authUserPill">
+        <span class="user-role-tag" id="userRoleTag">PATIENT</span>
+        <span class="user-email-text" id="userEmailText">patient@demo.com</span>
+      </div>
+      <button class="btn-xs btn-primary auth-switch-btn" onclick="openUnifiedAuthModal()">
+        <i data-lucide="key"></i>
+        <span>Switch Portal / Login</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Active Disaster Banner (Dynamic) -->
+  <div id="disasterAlertBanner" class="disaster-banner hidden">
+    <div class="banner-content">
+      <i data-lucide="bell-ring" class="banner-icon animate-bounce"></i>
+      <div>
+        <strong id="bannerTitle">ACTIVE DISASTER ADVISORY:</strong>
+        <span id="bannerText">Loading warning details...</span>
+      </div>
+    </div>
+    <button class="banner-close-btn" onclick="dismissBanner()">✕</button>
+  </div>
+
+  <!-- Screen Strobe Overlay for Night Rescue / Trapped Victims -->
+  <div id="strobeOverlay" class="strobe-overlay hidden">
+    <div class="strobe-msg">RESCUE BEACON FLASHING — HOLD PHONE TOWARDS SKY / WINDOW</div>
+    <button class="btn btn-dark" onclick="toggleStrobe(false)">STOP STROBE</button>
+  </div>
+
+  <!-- Main Multi-View Container -->
+  <main class="main-container">
+
+    <!-- ================= VIEW 1: CITIZEN / PATIENT SOS ================= -->
+    <section id="citizenView" class="view-panel active">
+      <!-- Patient Portal Banner -->
+      <div class="portal-header-banner patient-banner">
+        <div class="banner-left">
+          <div class="portal-badge-icon"><i data-lucide="user-check"></i></div>
+          <div>
+            <div class="portal-heading">Patient Portal &bull; Emergency Distress &amp; EHR Pass</div>
+            <div class="portal-lead">Instant 1-tap distress dispatch, persistent medical profile, medication manager, and nearby trauma resources.</div>
+          </div>
+        </div>
+        <div class="banner-right" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button class="btn-xs btn-outline" onclick="openPatientQRModal('P-101')"><i data-lucide="qr-code"></i> My Emergency Pass</button>
+          <button class="btn-xs btn-primary" onclick="openEditMedicalHistoryModal('P-101')"><i data-lucide="edit-3"></i> Edit Medical History &amp; Meds</button>
+        </div>
+      </div>
+
+      <div class="grid-layout grid-citizen">
+        
+        <!-- Left Column: SOS Trigger & Emergency Tools -->
+        <div class="panel-card sos-card">
+          <div class="card-header">
+            <h2 class="card-title"><i data-lucide="siren"></i> One-Tap Emergency SOS</h2>
+            <span class="badge badge-danger">Immediate Dispatch</span>
+          </div>
+
+          <div class="sos-center-area">
+            <button id="sosMainBtn" class="sos-giant-button" onclick="handleSOSClick()">
+              <div class="sos-ring ring-1"></div>
+              <div class="sos-ring ring-2"></div>
+              <div class="sos-inner">
+                <i data-lucide="phone-call" class="sos-icon"></i>
+                <span class="sos-text">TAP FOR SOS</span>
+                <span class="sos-sub">Dispatches Ambulance + Alerts ER</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- SOS Cancel Countdown Modal -->
+          <div id="sosCountdownModal" class="countdown-modal hidden">
+            <div class="countdown-content">
+              <h3>🚨 DISPATCHING EMERGENCY CREW IN</h3>
+              <div id="countdownNumber" class="countdown-big">3</div>
+              <p>Acquiring GPS coordinates & alerting nearest trauma center...</p>
+              <button class="btn btn-secondary btn-block" onclick="cancelSOS()">CANCEL EMERGENCY (False Alarm)</button>
+            </div>
+          </div>
+
+          <!-- Quick Hazard / Emergency Type Selectors -->
+          <div class="hazard-select-group">
+            <label class="section-label">Select Emergency Type:</label>
+            <div class="hazard-chips" id="hazardChips">
+              <button class="chip active" data-hazard="CARDIAC"><i data-lucide="heart-pulse"></i> Heart Attack / Cardiac</button>
+              <button class="chip" data-hazard="ACCIDENT"><i data-lucide="car"></i> Road Accident / Trauma</button>
+              <button class="chip" data-hazard="FLOOD"><i data-lucide="waves"></i> Flash Flood / Drowning</button>
+              <button class="chip" data-hazard="FIRE"><i data-lucide="flame"></i> Fire / Smoke Trap</button>
+              <button class="chip" data-hazard="EARTHQUAKE"><i data-lucide="building"></i> Earthquake / Collapse</button>
+              <button class="chip" data-hazard="BREATHING"><i data-lucide="wind"></i> Severe Asthma / Hypoxia</button>
+            </div>
+          </div>
+
+          <!-- Multiple Ambulance Request Selector -->
+          <div class="ambulance-qty-group">
+            <label class="section-label">Ambulances Needed for Dispatch:</label>
+            <div class="qty-chips" id="ambQtyChips">
+              <button class="chip active" data-qty="1"><i data-lucide="ambulance"></i> 1 Ambulance (Standard)</button>
+              <button class="chip" data-qty="2"><i data-lucide="truck"></i> 2 Ambulances (Dual Rescue)</button>
+              <button class="chip" data-qty="3"><i data-lucide="users"></i> 3 Ambulances (Mass Casualty)</button>
+            </div>
+          </div>
+
+          <!-- Active Dispatches & Multi-Ambulance Status Tracker for Citizen -->
+          <div id="citizenActiveEmergencyBox" class="citizen-active-emergency hidden">
+            <div class="card-header" style="padding-bottom:0.4rem;">
+              <h4 class="card-title" style="font-size:0.85rem;"><i data-lucide="activity"></i> Assigned Emergency Ambulances</h4>
+              <button class="btn-xs btn-outline" onclick="requestMoreAmbulanceForCurrentEmergency()">
+                <i data-lucide="plus-circle"></i> +1 Ambulance
+              </button>
+            </div>
+            <div id="citizenAmbulanceList" class="assigned-amb-list">
+              <!-- Dynamically populated with individual ambulance status badges -->
+            </div>
+          </div>
+
+          <!-- Location & Rescue Tools -->
+          <div class="emergency-tools-grid">
+            <div class="tool-box">
+              <label><i data-lucide="map-pin"></i> Live GPS Coordinates</label>
+              <div class="coords-display" id="coordsDisplay">22.5726° N, 88.3639° E</div>
+              <button class="btn-xs btn-outline" onclick="getUserLocation()"><i data-lucide="locate"></i> Refresh GPS</button>
+            </div>
+            
+            <div class="tool-box">
+              <label><i data-lucide="volume-2"></i> Rescue Siren & Strobe</label>
+              <div class="rescue-actions">
+                <button id="sirenBtn" class="btn-sm btn-warning" onclick="toggleSiren()">
+                  <i data-lucide="volume-2"></i> <span id="sirenBtnText">Sound Siren</span>
+                </button>
+                <button class="btn-sm btn-info" onclick="toggleStrobe(true)">
+                  <i data-lucide="flashlight"></i> Rescue Strobe
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Emergency Health Pass Preview -->
+          <div class="emergency-qr-banner">
+            <div class="qr-info" onclick="openPatientQRModal('P-101')" style="cursor:pointer;">
+              <i data-lucide="qr-code" class="qr-icon"></i>
+              <div>
+                <strong>My Emergency Medical Pass (QR)</strong>
+                <p>Blood: <span class="badge badge-accent" id="previewBloodBadge">O-</span> | Allergies: <span class="text-danger" id="previewAllergyBadge">Penicillin</span></p>
+              </div>
+            </div>
+            <div class="qr-banner-btns" style="display:flex; gap:0.4rem;">
+              <button class="btn-xs btn-outline" onclick="openPatientQRModal('P-101')">View Pass</button>
+              <button class="btn-xs btn-primary" onclick="openEditMedicalHistoryModal('P-101')">
+                <i data-lucide="edit-3"></i> Edit History
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Nearby Hospitals Radar (Blood & Oxygen Availability) -->
+        <div class="panel-card hospital-radar-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title"><i data-lucide="cross"></i> Nearby Hospitals & Resource Radar</h2>
+              <p class="card-desc">Real-time status of Blood Units, ICU Beds & Medical Oxygen</p>
+            </div>
+            <div class="radar-filters">
+              <select id="bloodFilter" class="select-filter" onchange="loadHospitals()">
+                <option value="">Blood Group: Any</option>
+                <option value="A+">Blood: A+</option>
+                <option value="A-">Blood: A-</option>
+                <option value="B+">Blood: B+</option>
+                <option value="B-">Blood: B-</option>
+                <option value="AB+">Blood: AB+</option>
+                <option value="AB-">Blood: AB-</option>
+                <option value="O+">Blood: O+</option>
+                <option value="O-">Blood: O- (Universal)</option>
+              </select>
+              
+              <label class="filter-toggle">
+                <input type="checkbox" id="oxygenFilter" onchange="loadHospitals()">
+                <span>High O₂ (>70%)</span>
+              </label>
+
+              <label class="filter-toggle">
+                <input type="checkbox" id="icuFilter" onchange="loadHospitals()">
+                <span>ICU Available</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Live Interactive Map -->
+          <div id="citizenMap" class="map-container"></div>
+
+          <!-- Hospital List with detailed live meters -->
+          <div class="hospital-list-wrap" id="hospitalList">
+            <div class="loading-state">Loading nearby hospital capabilities...</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= VIEW 2: AMBULANCE EMT CONSOLE ================= -->
+    <section id="ambulanceView" class="view-panel">
+      <!-- Ambulance Portal Banner -->
+      <div class="portal-header-banner ambulance-banner">
+        <div class="banner-left">
+          <div class="portal-badge-icon"><i data-lucide="ambulance"></i></div>
+          <div>
+            <div class="portal-heading">Ambulance EMT Portal &bull; Mobile Dispatch &amp; Green Corridor</div>
+            <div class="portal-lead">Real-time emergency telemetry, traffic signal preemption, turn-by-turn route guidance, and officer safety check-ins.</div>
+          </div>
+        </div>
+        <div class="banner-right" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button class="btn-xs btn-primary" onclick="officerSafetyCheckin()"><i data-lucide="shield-check"></i> Officer Safety Check-In</button>
+        </div>
+      </div>
+
+      <div class="grid-layout grid-ambulance">
+        
+        <!-- Left Panel: Dispatches & Green Corridor Control -->
+        <div class="panel-card">
+          <div class="card-header">
+            <h2 class="card-title"><i data-lucide="radio"></i> Active Emergency Dispatches</h2>
+            <span class="badge badge-accent" id="activeDispatchesCount">1 Active</span>
+          </div>
+
+          <div id="dispatchCardsList" class="dispatches-list">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Green Corridor Control Box -->
+          <div class="green-corridor-box">
+            <div class="gc-header">
+              <div class="gc-icon-wrap">
+                <i data-lucide="traffic-cone" class="gc-icon"></i>
+              </div>
+              <div>
+                <h3 class="gc-title">TRAFFIC SIGNAL GREEN CORRIDOR</h3>
+                <p class="gc-subtitle">Automated Signal Preemption for Zero Red Lights</p>
+              </div>
+            </div>
+
+            <div class="gc-switch-row">
+              <label class="switch-label">
+                <span id="gcStatusText">CORRIDOR: STANDBY</span>
+              </label>
+              <button id="gcToggleBtn" class="btn btn-success btn-glow" onclick="toggleGreenCorridor()">
+                <i data-lucide="zap"></i> ACTIVATE GREEN CORRIDOR
+              </button>
+            </div>
+
+            <div class="gc-metrics-grid" id="gcMetrics">
+              <div class="gc-metric">
+                <span class="metric-val" id="gcTimeSaved">7.4 min</span>
+                <span class="metric-lbl">Est. Time Saved</span>
+              </div>
+              <div class="gc-metric">
+                <span class="metric-val" id="gcSignalsCleared">4 / 4</span>
+                <span class="metric-lbl">Signals Green</span>
+              </div>
+              <div class="gc-metric">
+                <span class="metric-val" id="gcPriorityEta">6.2 min</span>
+                <span class="metric-lbl">Priority ETA</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pre-Hospital Vitals Telemetry Box -->
+          <div class="vitals-telemetry-box">
+            <div class="card-header">
+              <h4 class="card-title"><i data-lucide="activity"></i> Patient Vitals Telemetry (To ER)</h4>
+              <button class="btn-xs btn-outline" onclick="sendVitalsToHospital()">Push to Trauma Center</button>
+            </div>
+            <div class="vitals-input-row">
+              <div class="vital-input">
+                <label>Blood Pressure</label>
+                <input type="text" id="vitalBP" value="120/80" />
+              </div>
+              <div class="vital-input">
+                <label>Pulse (BPM)</label>
+                <input type="number" id="vitalPulse" value="98" />
+              </div>
+              <div class="vital-input">
+                <label>SpO₂ Oxygen (%)</label>
+                <input type="number" id="vitalSpo2" value="94" />
+              </div>
+              <div class="vital-input">
+                <label>GCS Score</label>
+                <input type="number" id="vitalGCS" value="14" max="15" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 3: Officer Safety Check-In Widget -->
+          <div class="officer-safety-box" id="officerSafetyBox">
+            <div class="card-header" style="border:none; padding-bottom:0.5rem;">
+              <h4 class="card-title" style="font-size:0.9rem;">
+                <i data-lucide="shield-check"></i> Officer Safety Check-In
+              </h4>
+              <div id="officerSafetyStatus" class="officer-status-pill ok">
+                <span class="live-dot"></span> STATUS: OK
+              </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+              <div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Last Check-In:</div>
+                <div style="font-family:var(--font-mono); font-size:0.85rem; font-weight:700;" id="lastCheckinTime">No check-ins yet</div>
+              </div>
+              <div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Minutes Since:</div>
+                <div style="font-family:var(--font-mono); font-size:0.85rem; font-weight:700; color:var(--success);" id="minutesSinceCheckin">—</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="officerSafetyCheckin()">
+                <i data-lucide="shield-check"></i> SAFE CHECK-IN
+              </button>
+            </div>
+            <div id="checkinLog" class="checkin-log-list" style="display:none;"></div>
+            <button class="btn-xs btn-outline" style="margin-top:0.4rem;" onclick="toggleCheckinLog()">
+              <i data-lucide="list"></i> View Check-In History
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Panel: Navigation Route & Traffic Signal Simulation -->
+        <div class="panel-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title"><i data-lucide="navigation"></i> Live Ambulance Navigation & Traffic Grid</h2>
+              <p class="card-desc">Simulating ambulance transit and traffic preemption in real-time</p>
+            </div>
+            <div class="nav-controls">
+              <button id="simDriveBtn" class="btn-sm btn-primary" onclick="startAmbulanceSimulation()">
+                <i data-lucide="play"></i> Start Driving Simulation
+              </button>
+            </div>
+          </div>
+
+          <div id="ambulanceMap" class="map-container"></div>
+
+          <!-- Turn-by-Turn Waypoint List -->
+          <div class="turn-directions" id="turnDirections">
+            <div class="turn-step active">
+              <i data-lucide="arrow-up"></i>
+              <div>
+                <strong>Proceed on Central Metro Avenue (800m)</strong>
+                <span>Traffic signals SIG-01 & SIG-02 preempted to GREEN</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= VIEW 3: HOSPITAL ER & BLOOD INVENTORY ================= -->
+    <section id="hospitalView" class="view-panel">
+      <div class="grid-layout grid-hospital">
+        
+        <!-- Left Panel: Incoming Casualties & Patient EHR Scanner -->
+        <div class="panel-card">
+          <div class="card-header">
+            <h2 class="card-title"><i data-lucide="truck"></i> Incoming Casualty Radar</h2>
+            <span class="badge badge-danger">ER Level 1 Priority</span>
+          </div>
+
+          <div class="incoming-queue" id="incomingQueue">
+            <!-- Dynamic Incoming Cards -->
+          </div>
+
+          <!-- Doctor EHR Access Box -->
+          <div class="doctor-ehr-box">
+            <div class="card-header">
+              <h3 class="card-title"><i data-lucide="file-badge"></i> Doctor Emergency EHR Lookup</h3>
+            </div>
+            <p class="text-muted">Instantly retrieve life-saving allergies, chronic conditions, and surgical history.</p>
+            
+            <div class="ehr-search-row">
+              <input type="text" id="ehrPatientInput" class="input-field" placeholder="Enter Patient ID (e.g. P-101, P-102)" value="P-101" />
+              <button class="btn btn-primary" onclick="fetchPatientEHR()">
+                <i data-lucide="search"></i> Access History
+              </button>
+            </div>
+
+            <!-- Patient EHR Display Card -->
+            <div id="ehrRecordCard" class="ehr-record-card hidden">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Panel: Blood Bank & Oxygen Manifold Management -->
+        <div class="panel-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title"><i data-lucide="droplet"></i> Blood Bank & Oxygen Capacity Controls</h2>
+              <p class="card-desc">Apollo Trauma & Multispecialty Center (HOSP-01)</p>
+            </div>
+            <button class="btn-xs btn-outline" onclick="loadHospitalInventory()"><i data-lucide="refresh-cw"></i> Sync</button>
+          </div>
+
+          <!-- Oxygen Status Gauge -->
+          <div class="oxygen-manager-box">
+            <div class="oxygen-row">
+              <div class="oxygen-gauge-card">
+                <label>Liquid Oxygen Manifold</label>
+                <div class="gauge-display">
+                  <span class="gauge-val" id="hospLiquidO2">92.5%</span>
+                  <div class="gauge-bar-wrap">
+                    <div class="gauge-bar" id="hospLiquidO2Bar" style="width: 92.5%;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="oxygen-gauge-card">
+                <label>Oxygen Cylinders Reserve</label>
+                <div class="gauge-display">
+                  <span class="gauge-val" id="hospCylinders">85 units</span>
+                  <div class="cylinder-actions">
+                    <button class="btn-xs btn-secondary" onclick="adjustCylinders(-5)">-5</button>
+                    <button class="btn-xs btn-primary" onclick="adjustCylinders(+10)">+10 Restock</button>
+                  </div>
+                </div>
+              </div>
+              <div class="oxygen-gauge-card">
+                <label>ICU Beds with Ventilators</label>
+                <div class="gauge-display">
+                  <span class="gauge-val text-accent" id="hospICUBeds">14 available</span>
+                  <div class="cylinder-actions">
+                    <button class="btn-xs btn-secondary" onclick="adjustICUBeds(-1)">-1</button>
+                    <button class="btn-xs btn-primary" onclick="adjustICUBeds(+1)">+1</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Blood Bank 8-Group Grid -->
+          <h3 class="section-label">Real-Time Blood Bank Inventory</h3>
+          <div class="blood-grid" id="hospitalBloodGrid">
+            <!-- Dynamic blood group units with + and - buttons -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= VIEW 4: TRAFFIC & GREEN CORRIDOR COMMAND ================= -->
+    <section id="trafficView" class="view-panel">
+      <div class="grid-layout grid-traffic">
+        <div class="panel-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title"><i data-lucide="route"></i> City-Wide Emergency & Traffic Grid Map</h2>
+              <p class="card-desc">Real-time status of all traffic signal controllers and active green corridors</p>
+            </div>
+            <div class="city-metrics-pill" id="trafficSummaryPill">
+              6 Signals | 2 Active Corridors
+            </div>
+          </div>
+
+          <div id="trafficMap" class="map-container"></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="card-header">
+            <h2 class="card-title"><i data-lucide="cpu"></i> Traffic Signal Intersections</h2>
+            <button class="btn-xs btn-success" onclick="overrideAllSignals('GREEN')">All Green Emergency</button>
+            <button class="btn-xs btn-secondary" onclick="overrideAllSignals('RED')">Normal Cycle</button>
+          </div>
+
+          <div class="signal-table-wrap">
+            <table class="signal-table">
+              <thead>
+                <tr>
+                  <th>Intersection</th>
+                  <th>Status</th>
+                  <th>Green Corridor</th>
+                  <th>Manual Override</th>
+                </tr>
+              </thead>
+              <tbody id="signalTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Disaster Alert Broadcast Center -->
+          <div class="broadcast-center-box">
+            <div class="card-header">
+              <h3 class="card-title"><i data-lucide="megaphone"></i> Issue City-Wide Disaster Alert</h3>
+            </div>
+            <div class="broadcast-form">
+              <input type="text" id="broadcastTitle" class="input-field" placeholder="Alert Title (e.g. FLASH FLOOD WARNING)" />
+              <div class="form-row">
+                <select id="broadcastHazard" class="select-filter">
+                  <option value="FLOOD">Hazard: Flood</option>
+                  <option value="EARTHQUAKE">Hazard: Earthquake</option>
+                  <option value="FIRE">Hazard: Chemical / Fire</option>
+                  <option value="ACCIDENT">Hazard: Mass Casualty Accident</option>
+                </select>
+                <select id="broadcastSeverity" class="select-filter">
+                  <option value="CRITICAL">Severity: CRITICAL</option>
+                  <option value="HIGH">Severity: HIGH</option>
+                  <option value="MODERATE">Severity: MODERATE</option>
+                </select>
+              </div>
+              <textarea id="broadcastDesc" class="input-field textarea-field" placeholder="Safety instructions & safe evacuation corridors for citizens..."></textarea>
+              <button class="btn btn-danger btn-block" onclick="publishBroadcastAlert()">
+                <i data-lucide="radio"></i> Broadcast Siren & Alert to All Connected Devices
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VIEW 5: AI PRESCRIPTION & JARGON DECODER ================= -->
+    <section id="rxDecoderView" class="view-panel">
+      <div class="grid-layout grid-rx">
+        
+        <!-- Left: Input Prescription / Medical Note -->
+        <div class="panel-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title"><i data-lucide="file-heart"></i> AI Medical Jargon & Rx Simplifier</h2>
+              <p class="card-desc">Translates doctor abbreviations, clinical Latin, and complex terms into crystal clear instructions</p>
+            </div>
+            <div class="sample-pills">
+              <span class="sample-lbl">Try Sample:</span>
+              <button class="btn-xs btn-outline" onclick="loadSampleRx(1)">Trauma / Asthma</button>
+              <button class="btn-xs btn-outline" onclick="loadSampleRx(2)">Cardiac & BP</button>
+              <button class="btn-xs btn-outline" onclick="loadSampleRx(3)">Infection & Antibiotic</button>
+            </div>
+          </div>
+
+          <div class="rx-input-container">
+            <textarea id="rawRxInput" class="rx-textarea" placeholder="Paste doctor's prescription, discharge notes, or complex lab terms here...
+Example: 'Rx: Tab Augmentin 625mg PO TID PC x 7d. Pt presents with acute dyspnea and tachycardia. Neb Salbutamol STAT and PRN.'"></textarea>
+          </div>
+
+          <div class="rx-action-row">
+            <button class="btn btn-primary btn-lg" onclick="decodePrescription()">
+              <i data-lucide="sparkles"></i> Simplify Prescription in Plain Language
+            </button>
+            <button class="btn btn-secondary btn-lg" onclick="clearRxInput()">
+              <i data-lucide="trash-2"></i> Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Plain English Breakdown & Audio Read-Aloud -->
+        <div class="panel-card">
+          <div class="card-header">
+            <h2 class="card-title"><i data-lucide="check-circle-2"></i> Plain English Explanation</h2>
+            <button id="rxVoiceBtn" class="btn-sm btn-info" onclick="toggleSpeechReadAloud()">
+              <i data-lucide="volume-2"></i> <span id="rxVoiceText">Read Aloud (Voice)</span>
+            </button>
+          </div>
+
+          <div id="rxOutputContainer" class="rx-output-container">
+            <div class="rx-placeholder">
+              <i data-lucide="stethoscope" class="rx-placeholder-icon"></i>
+              <p>Enter a prescription or select a sample on the left to see the instant plain-language breakdown and voice guide.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= VIEW 6: DISASTER TRIAGE & PROTOCOLS ================= -->
+    <section id="triageView" class="view-panel">
+      <div class="grid-layout grid-triage">
+        
+        <!-- Left: Interactive START Triage Calculator -->
+        <div class="panel-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title"><i data-lucide="clipboard-pulse"></i> START Disaster Triage Algorithm</h2>
+              <p class="card-desc">Simple Triage And Rapid Treatment for mass casualty & disaster incidents</p>
+            </div>
+          </div>
+
+          <div class="triage-step-form">
+            <div class="triage-question">
+              <label>1. Can the patient walk independently?</label>
+              <div class="radio-group">
+                <label><input type="radio" name="canWalk" value="true" checked onchange="runTriageCalculation()"> Yes (Able to walk)</label>
+                <label><input type="radio" name="canWalk" value="false" onchange="runTriageCalculation()"> No (Cannot walk)</label>
+              </div>
+            </div>
+
+            <div class="triage-question">
+              <label>2. Respiration Rate (Breaths per minute):</label>
+              <div class="slider-row">
+                <input type="range" id="triageRespSlider" min="0" max="45" value="22" oninput="updateRespLabel(this.value); runTriageCalculation();" />
+                <span id="triageRespVal" class="slider-val">22 bpm</span>
+              </div>
+            </div>
+
+            <div class="triage-question">
+              <label>3. Radial Pulse Present?</label>
+              <div class="radio-group">
+                <label><input type="radio" name="radialPulse" value="true" checked onchange="runTriageCalculation()"> Yes (Radial pulse palpable)</label>
+                <label><input type="radio" name="radialPulse" value="false" onchange="runTriageCalculation()"> No (Weak or absent)</label>
+              </div>
+            </div>
+
+            <div class="triage-question">
+              <label>4. Mental Status (Follows simple verbal commands):</label>
+              <div class="radio-group">
+                <label><input type="radio" name="mentalStatus" value="true" checked onchange="runTriageCalculation()"> Yes (Alert & responsive)</label>
+                <label><input type="radio" name="mentalStatus" value="false" onchange="runTriageCalculation()"> No (Unresponsive or confused)</label>
+              </div>
+            </div>
+
+            <div id="triageResultCard" class="triage-result-card">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Survival Protocols for Hazards -->
+        <div class="panel-card">
+          <div class="card-header">
+            <h2 class="card-title"><i data-lucide="book-open"></i> Disaster Emergency Checklists</h2>
+          </div>
+
+          <div class="hazard-accordion">
+            <div class="hazard-acc-item active">
+              <div class="hazard-acc-header" onclick="toggleAcc(this)">
+                <span><i data-lucide="waves" class="text-info"></i> Flash Flood Protocol</span>
+                <i data-lucide="chevron-down"></i>
+              </div>
+              <div class="hazard-acc-body">
+                <p><strong>Immediate Action:</strong> Move to higher elevation. Disconnect electrical switches. Do not walk or drive through moving water (>15cm can sweep you off feet).</p>
+                <ul class="checklist">
+                  <li><i data-lucide="check"></i> Keep emergency medications in sealed waterproof bag</li>
+                  <li><i data-lucide="check"></i> Signal rescue boat ambulances with torch or bright cloth</li>
+                  <li><i data-lucide="check"></i> Boil all drinking water or use halogen tablets</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="hazard-acc-item">
+              <div class="hazard-acc-header" onclick="toggleAcc(this)">
+                <span><i data-lucide="building" class="text-warning"></i> Earthquake Protocol</span>
+                <i data-lucide="chevron-down"></i>
+              </div>
+              <div class="hazard-acc-body">
+                <p><strong>Immediate Action:</strong> DROP, COVER, AND HOLD ON under sturdy table or interior corner. Avoid glass, windows, and outer walls.</p>
+                <ul class="checklist">
+                  <li><i data-lucide="check"></i> If trapped under debris: Tap on pipes/walls instead of shouting to conserve oxygen</li>
+                  <li><i data-lucide="check"></i> Cover nose and mouth with cloth against concrete dust</li>
+                  <li><i data-lucide="check"></i> Turn off domestic gas cylinder valve immediately</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="hazard-acc-item">
+              <div class="hazard-acc-header" onclick="toggleAcc(this)">
+                <span><i data-lucide="flame" class="text-danger"></i> Fire & Smoke Protocol</span>
+                <i data-lucide="chevron-down"></i>
+              </div>
+              <div class="hazard-acc-body">
+                <p><strong>Immediate Action:</strong> Stay low below the smoke line. Smoke rises to ceiling. Check doorknobs with the back of your hand before opening.</p>
+                <ul class="checklist">
+                  <li><i data-lucide="check"></i> Wet a cloth and place over nose and mouth</li>
+                  <li><i data-lucide="check"></i> If clothes catch fire: STOP, DROP, AND ROLL</li>
+                  <li><i data-lucide="check"></i> Never use elevators during a fire; use fire escape stairwells</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="hazard-acc-item">
+              <div class="hazard-acc-header" onclick="toggleAcc(this)">
+                <span><i data-lucide="heart-pulse" class="text-danger"></i> CPR & Cardiac Protocol</span>
+                <i data-lucide="chevron-down"></i>
+              </div>
+              <div class="hazard-acc-body">
+                <p><strong>Immediate Action:</strong> Call 1-Tap SOS immediately. Place hands in center of chest and push hard and fast (100–120 compressions/min) to the beat of "Stayin' Alive".</p>
+                <ul class="checklist">
+                  <li><i data-lucide="check"></i> Push down at least 5 cm (2 inches) depth</li>
+                  <li><i data-lucide="check"></i> Allow chest to fully recoil between each compression</li>
+                  <li><i data-lucide="check"></i> If AED available, turn on and follow automated voice prompts</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= VIEW 7: DOCTOR PORTAL ================= -->
+  <section id="doctorView" class="view-panel">
+    <!-- Doctor Portal Banner -->
+    <div class="portal-header-banner doctor-banner">
+      <div class="banner-left">
+        <div class="portal-badge-icon"><i data-lucide="stethoscope"></i></div>
+        <div>
+          <div class="portal-heading">Doctor Portal &bull; Clinical Emergency Command &amp; Roster</div>
+          <div class="portal-lead">Manage shift availability, respond to trauma calls, lookup emergency patient EHRs, and coordinate multi-doctor alerts.</div>
+        </div>
+      </div>
+      <div class="banner-right" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button class="btn-xs btn-outline" onclick="loadDoctors()"><i data-lucide="refresh-cw"></i> Refresh Doctor Roster</button>
+      </div>
+    </div>
+
+    <div class="grid-layout grid-doctor">
+
+      <!-- Left: Doctor Login / Register + Active Session -->
+      <div class="panel-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><i data-lucide="stethoscope"></i> Doctor Login Portal</h2>
+            <p class="card-desc">Emergency responders and doctors login to manage case consultations</p>
+          </div>
+          <span class="badge badge-success" id="doctorSessionBadge" style="display:none;">● LOGGED IN</span>
+        </div>
+
+        <!-- Login Form (shown when not logged in) -->
+        <div id="doctorLoginForm">
+          <div class="tab-toggle-row" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+            <button class="btn btn-primary btn-sm" id="loginTabBtn" onclick="switchDoctorTab('login')">Login</button>
+            <button class="btn btn-outline btn-sm" id="registerTabBtn" onclick="switchDoctorTab('register')">Register New Doctor</button>
+          </div>
+
+          <!-- Login Panel -->
+          <div id="doctorLoginPanel">
+            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+              <div class="vital-input">
+                <label>Doctor Email</label>
+                <input type="email" id="docLoginEmail" class="input-field" placeholder="e.g. ananya@resqnet.in" value="ananya@resqnet.in" />
+              </div>
+              <div class="vital-input">
+                <label>Password</label>
+                <input type="password" id="docLoginPassword" class="input-field" placeholder="Enter password" value="secure123" />
+              </div>
+              <button class="btn btn-primary btn-block" onclick="doctorLogin()">
+                <i data-lucide="log-in"></i> Login to Emergency System
+              </button>
+              <p style="font-size:0.72rem; color:var(--text-muted); text-align:center;">Demo: Use any of the pre-seeded doctors. Any password works for seeded accounts.</p>
+            </div>
+          </div>
+
+          <!-- Register Panel (hidden by default) -->
+          <div id="doctorRegisterPanel" style="display:none;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem;">
+              <div class="vital-input" style="grid-column:1/-1;">
+                <label>Full Name (with Dr. prefix)</label>
+                <input type="text" id="regDocName" class="input-field" placeholder="e.g. Dr. John Smith" />
+              </div>
+              <div class="vital-input">
+                <label>Email</label>
+                <input type="email" id="regDocEmail" class="input-field" placeholder="doctor@hospital.in" />
+              </div>
+              <div class="vital-input">
+                <label>Password</label>
+                <input type="password" id="regDocPassword" class="input-field" placeholder="Create password" />
+              </div>
+              <div class="vital-input">
+                <label>Specialization</label>
+                <select id="regDocSpec" class="select-filter input-field">
+                  <option value="Trauma Surgery">Trauma Surgery</option>
+                  <option value="Cardiology">Cardiology</option>
+                  <option value="Neurology">Neurology</option>
+                  <option value="General Emergency Medicine">General Emergency Medicine</option>
+                  <option value="Pediatric Emergency">Pediatric Emergency</option>
+                  <option value="Transplant Surgery">Transplant Surgery</option>
+                  <option value="Orthopedics">Orthopedics</option>
+                  <option value="Burns & Plastic Surgery">Burns &amp; Plastic Surgery</option>
+                </select>
+              </div>
+              <div class="vital-input">
+                <label>Years of Experience</label>
+                <input type="number" id="regDocExp" class="input-field" placeholder="e.g. 8" min="0" max="60" />
+              </div>
+              <div class="vital-input">
+                <label>Phone</label>
+                <input type="text" id="regDocPhone" class="input-field" placeholder="+91-98200-XXXXX" />
+              </div>
+              <div class="vital-input" style="grid-column:1/-1;">
+                <label>Brief Professional Bio</label>
+                <input type="text" id="regDocBio" class="input-field" placeholder="e.g. Board certified in trauma with ATLS certification..." />
+              </div>
+            </div>
+            <button class="btn btn-success btn-block" style="margin-top:0.75rem;" onclick="doctorRegister()">
+              <i data-lucide="user-plus"></i> Register Doctor Account
+            </button>
+          </div>
+        </div>
+
+        <!-- Logged-in Doctor Session Panel (hidden until login) -->
+        <div id="doctorSessionPanel" style="display:none;">
+          <div class="doctor-session-card" id="activeDocCard"></div>
+
+          <!-- Assign to Emergency -->
+          <div style="margin-top:1rem; padding-top:0.75rem; border-top:1px solid var(--border-color);">
+            <label class="section-label"><i data-lucide="link"></i> Attach to Active Emergency</label>
+            <div style="display:flex; gap:0.5rem; margin-top:0.35rem;">
+              <input type="text" id="docEmergencyInput" class="input-field" placeholder="Emergency ID (e.g. EMG-XXXXXX)" style="flex:1;" />
+              <button class="btn btn-danger btn-sm" onclick="selfAssignToEmergency()">
+                <i data-lucide="siren"></i> Join Case
+              </button>
+            </div>
+          </div>
+
+          <!-- Availability Toggle -->
+          <div style="margin-top:0.75rem; display:flex; gap:0.5rem;">
+            <button class="btn btn-success btn-sm" onclick="setDoctorAvailability(true)">
+              <i data-lucide="check-circle-2"></i> Set Available
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="setDoctorAvailability(false)">
+              <i data-lucide="moon"></i> Set Off-Duty
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="doctorLogout()">
+              <i data-lucide="log-out"></i> Logout
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Doctor Directory + Multi-Select for Emergency -->
+      <div class="panel-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><i data-lucide="users"></i> On-Call Doctor Directory</h2>
+            <p class="card-desc">Browse, filter, and select multiple doctors to alert for an emergency</p>
+          </div>
+          <div style="display:flex; gap:0.4rem; align-items:center;">
+            <select id="docSpecFilter" class="select-filter" onchange="loadDoctors()">
+              <option value="">All Specialties</option>
+              <option value="Trauma Surgery">Trauma Surgery</option>
+              <option value="Cardiology">Cardiology</option>
+              <option value="Neurology">Neurology</option>
+              <option value="General Emergency Medicine">General Emergency Medicine</option>
+              <option value="Pediatric Emergency">Pediatric Emergency</option>
+              <option value="Transplant Surgery">Transplant Surgery</option>
+            </select>
+            <label class="filter-toggle">
+              <input type="checkbox" id="docAvailFilter" onchange="loadDoctors()" checked>
+              <span>Available Only</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Multi-select action bar -->
+        <div id="docMultiSelectBar" class="doc-multiselect-bar" style="display:none;">
+          <span id="docSelectedCount" style="font-weight:700; color:var(--accent);">0 doctors selected</span>
+          <div style="display:flex; gap:0.5rem;">
+            <input type="text" id="docAlertEmergencyId" class="input-field" style="width:180px;" placeholder="Emergency ID to alert" />
+            <button class="btn btn-danger btn-sm" onclick="alertSelectedDoctors()">
+              <i data-lucide="bell-ring"></i> Alert Selected Doctors
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="clearDoctorSelections()">Clear</button>
+          </div>
+        </div>
+
+        <!-- Doctor Cards List -->
+        <div id="doctorDirectoryList" class="doctor-directory-list">
+          <div class="loading-state">Loading doctor directory...</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= VIEW 8: ORGAN GREEN CORRIDOR ================= -->
+  <section id="organView" class="view-panel">
+    <div class="grid-layout grid-organ">
+
+      <!-- Left: New Organ Transport Form + Active Corridors -->
+      <div class="panel-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><i data-lucide="heart-handshake"></i> Organ Transport Corridor</h2>
+            <p class="card-desc">Digital Green Corridor for live organ transplant transport</p>
+          </div>
+          <span class="badge badge-success organ-corridor-badge" id="organCorridorBadge">CORRIDOR STANDBY</span>
+        </div>
+
+        <h4 class="section-label">Activate New Organ Transport</h4>
+
+        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+          <div class="vital-input">
+            <label>Organ Type</label>
+            <select id="organType" class="select-filter input-field" onchange="updateOrganViabilityPreview()">
+              <option value="HEART">❤️ Heart (Viability: 4–6 hours)</option>
+              <option value="LUNG">🫁 Lung (Viability: 6–8 hours)</option>
+              <option value="LIVER">🫀 Liver (Viability: 12–24 hours)</option>
+              <option value="KIDNEY">🫘 Kidney (Viability: 24–36 hours)</option>
+              <option value="PANCREAS">🔵 Pancreas (Viability: 12–24 hours)</option>
+              <option value="CORNEA">👁️ Cornea (Viability: up to 14 days)</option>
+            </select>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem;">
+            <div class="vital-input">
+              <label>Donor Hospital (Origin)</label>
+              <select id="organDonorHospital" class="select-filter input-field">
+                <option value="HOSP-01">Apollo Trauma Center (HOSP-01)</option>
+                <option value="HOSP-02">City Emergency Hospital (HOSP-02)</option>
+                <option value="HOSP-03">St. Jude Critical Care (HOSP-03)</option>
+                <option value="HOSP-04">Metro Memorial Unit (HOSP-04)</option>
+                <option value="HOSP-05">Green Valley Children Care (HOSP-05)</option>
+              </select>
+            </div>
+            <div class="vital-input">
+              <label>Recipient Hospital (Destination)</label>
+              <select id="organRecipientHospital" class="select-filter input-field">
+                <option value="HOSP-03">St. Jude Critical Care (HOSP-03)</option>
+                <option value="HOSP-01">Apollo Trauma Center (HOSP-01)</option>
+                <option value="HOSP-02">City Emergency Hospital (HOSP-02)</option>
+                <option value="HOSP-04">Metro Memorial Unit (HOSP-04)</option>
+                <option value="HOSP-05">Green Valley Children Care (HOSP-05)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="vital-input">
+            <label>Assigned Ambulance</label>
+            <select id="organAmbulance" class="select-filter input-field">
+              <option value="AMB-101">AMB-101 — Paramedic Alpha-1 (ALS)</option>
+              <option value="AMB-102">AMB-102 — Trauma Rescue Unit 2 (ALS)</option>
+              <option value="AMB-103">AMB-103 — Cardiac Mobile ICU 3</option>
+              <option value="AMB-104">AMB-104 — City Rapid BLS 4</option>
+              <option value="AMB-105">AMB-105 — Disaster Rescue Boat/Ambulance</option>
+            </select>
+          </div>
+
+          <!-- Organ Viability Preview Box -->
+          <div class="organ-viability-preview" id="organViabilityPreview">
+            <div class="viability-header">
+              <span class="viability-organ-name" id="prevOrganName">❤️ HEART</span>
+              <span class="viability-window" id="prevViabilityWindow">Max 6 hours</span>
+            </div>
+            <div class="viability-bar-wrap">
+              <div class="viability-bar" id="prevViabilityBar" style="width:100%; background:var(--success);"></div>
+            </div>
+            <p class="viability-note" id="prevViabilityNote">Organ harvested. Activate corridor immediately. Every minute counts.</p>
+          </div>
+
+          <button class="btn btn-success btn-block btn-glow" onclick="activateOrganCorridor()">
+            <i data-lucide="zap"></i> ACTIVATE ORGAN GREEN CORRIDOR
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Active Organ Transport Cards with Viability Timers -->
+      <div class="panel-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><i data-lucide="activity"></i> Active Organ Transports</h2>
+            <p class="card-desc">Live viability countdowns and organ transport status tracking</p>
+          </div>
+          <button class="btn-xs btn-outline" onclick="loadOrganTransports()">
+            <i data-lucide="refresh-cw"></i> Refresh
+          </button>
+        </div>
+
+        <div id="organTransportsList" class="organ-transports-list">
+          <div class="loading-state">Loading organ transport corridors...</div>
+        </div>
+
+        <!-- Organ Viability Reference Guide -->
+        <div style="margin-top:0.5rem; padding:0.85rem; background:var(--bg-subtle); border-radius:var(--radius-md); border:1px solid var(--border-color);">
+          <span class="section-label">Organ Cold Ischemia Time Reference</span>
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:0.5rem; margin-top:0.5rem;">
+            <div class="viability-ref-cell" style="border-left-color:#ef4444;">
+              <span>❤️ Heart</span><strong>4–6 hrs</strong>
+            </div>
+            <div class="viability-ref-cell" style="border-left-color:#f59e0b;">
+              <span>🫁 Lung</span><strong>6–8 hrs</strong>
+            </div>
+            <div class="viability-ref-cell" style="border-left-color:#3b82f6;">
+              <span>🫀 Liver</span><strong>12–24 hrs</strong>
+            </div>
+            <div class="viability-ref-cell" style="border-left-color:#10b981;">
+              <span>🫘 Kidney</span><strong>24–36 hrs</strong>
+            </div>
+            <div class="viability-ref-cell" style="border-left-color:#8b5cf6;">
+              <span>🔵 Pancreas</span><strong>12–24 hrs</strong>
+            </div>
+            <div class="viability-ref-cell" style="border-left-color:#06b6d4;">
+              <span>👁️ Cornea</span><strong>Up to 14 days</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+  <!-- Emergency Patient QR Modal (Feature 5: Lock-Screen QR Pass) -->
+  <div id="patientQRModal" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title"><i data-lucide="qr-code"></i> Emergency Medical Pass &amp; Lock-Screen QR</h3>
+        <button class="modal-close" onclick="closePatientQRModal()">✕</button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="text-muted">Paramedics and ER trauma doctors scan this for instant allergy &amp; medical history.</p>
+
+        <!-- Feature 4: Offline SMS Fallback Banner -->
+        <div id="offlineSMSBanner" class="offline-sms-banner hidden">
+          <i data-lucide="wifi-off"></i>
+          <div>
+            <strong>You are OFFLINE.</strong> Internet SOS unavailable.
+            <a id="smsFallbackLink" href="#" class="sms-link-btn">TAP TO SEND EMERGENCY SMS →</a>
+          </div>
+        </div>
+
+        <div id="qrcodeCanvas" class="qr-box"></div>
+
+        <!-- Lock-Screen Canvas (hidden, used for download) -->
+        <canvas id="lockscreenCanvas" style="display:none;"></canvas>
+
+        <div class="qr-patient-summary" id="qrPatientSummary">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="lockscreen-hint">
+          <i data-lucide="smartphone"></i>
+          <span>Save as lock-screen wallpaper so bystanders can scan when you're unconscious</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closePatientQRModal()">Close</button>
+        <button class="btn btn-outline" onclick="openEditMedicalHistoryModal('P-101')"><i data-lucide="edit-3"></i> Edit History</button>
+        <button class="btn btn-info" onclick="downloadLockScreenQR()"><i data-lucide="download"></i> Save Lock-Screen</button>
+        <button class="btn btn-primary" onclick="printQRPass()"><i data-lucide="printer"></i> Print Pass</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Editable Medical History & Current Medications Modal -->
+  <div id="editMedicalHistoryModal" class="modal-backdrop hidden">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <div class="gc-icon-wrap" style="width:34px; height:34px; background:rgba(59,130,246,0.2);">
+            <i data-lucide="user-pen" style="width:20px; height:20px; color:var(--accent);"></i>
+          </div>
+          <div>
+            <h3 class="modal-title">Edit Patient Medical Profile & History</h3>
+            <p class="card-desc">Keep your emergency vital information and medication records up to date.</p>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeEditMedicalHistoryModal()">✕</button>
+      </div>
+
+      <div class="modal-body" style="max-height: 75vh; overflow-y: auto; display:flex; flex-direction:column; gap:1.25rem;">
+        
+        <!-- Section A: Personal & Emergency Vitals -->
+        <div class="panel-card" style="padding:1rem; background:var(--bg-subtle);">
+          <h4 class="card-title" style="font-size:0.95rem; margin-bottom:0.6rem;">
+            <i data-lucide="heart"></i> Vital Patient Details
+          </h4>
+          <div class="grid-layout" style="grid-template-columns: 1fr 1fr; gap:0.75rem;">
+            <div class="vital-input">
+              <label>Full Legal Name</label>
+              <input type="text" id="editFullName" class="input-field" />
+            </div>
+            <div class="vital-input">
+              <label>Date of Birth</label>
+              <input type="date" id="editDOB" class="input-field" />
+            </div>
+            <div class="vital-input">
+              <label>Blood Group</label>
+              <select id="editBloodGroup" class="select-filter input-field">
+                <option value="A+">A+ (A Positive)</option>
+                <option value="A-">A- (A Negative)</option>
+                <option value="B+">B+ (B Positive)</option>
+                <option value="B-">B- (B Negative)</option>
+                <option value="AB+">AB+ (AB Positive)</option>
+                <option value="AB-">AB- (AB Negative)</option>
+                <option value="O+">O+ (O Positive)</option>
+                <option value="O-">O- (O Negative - Universal Donor)</option>
+              </select>
+            </div>
+            <div class="vital-input">
+              <label>Health Insurance Policy / ID</label>
+              <input type="text" id="editInsurance" class="input-field" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section B: Critical Medical History & Allergies -->
+        <div class="panel-card" style="padding:1rem; background:var(--bg-subtle);">
+          <h4 class="card-title" style="font-size:0.95rem; margin-bottom:0.6rem;">
+            <i data-lucide="shield-alert"></i> Critical Medical Conditions & Allergies
+          </h4>
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <div class="vital-input">
+              <label><strong class="text-danger">Known Allergies</strong> (Separate multiple allergies with commas)</label>
+              <input type="text" id="editAllergies" class="input-field" placeholder="e.g. Severe Penicillin Allergy, Latex Sensitivity, Peanut Allergy" />
+              <span style="font-size:0.72rem; color:var(--text-muted);">Flagged prominently on first responder screens to avoid fatal medication errors.</span>
+            </div>
+            <div class="vital-input">
+              <label>Chronic Medical Conditions (Comma separated)</label>
+              <input type="text" id="editConditions" class="input-field" placeholder="e.g. Type 2 Diabetes Mellitus, Mild Asthma, Hypertension" />
+            </div>
+            <div class="vital-input">
+              <label>Past Major Surgeries / Implants</label>
+              <input type="text" id="editSurgeries" class="input-field" placeholder="e.g. Appendectomy (2018), Coronary Stent in LAD (2021)" />
+            </div>
+            <div class="vital-input">
+              <label>Primary Emergency Contact (Name ^ Phone)</label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                <input type="text" id="editContactName" class="input-field" placeholder="Contact Name (e.g. Pooja Sharma - Wife)" />
+                <input type="text" id="editContactPhone" class="input-field" placeholder="Phone (e.g. +91-98300-88881)" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section C: Current Medications Management (Granular Add/Edit/Remove) -->
+        <div class="panel-card" style="padding:1rem; background:var(--bg-subtle); border-left: 4px solid var(--accent);">
+          <div class="card-header" style="border:none; padding-bottom:0;">
+            <div>
+              <h4 class="card-title" style="font-size:0.95rem; color:var(--text-main);">
+                <i data-lucide="pill" style="color:var(--accent);"></i> Current Active Medications
+              </h4>
+              <p class="card-desc" style="color:#93c5fd;">
+                Add, edit, or remove individual medicines. <strong>Adding a medicine appends to your list and will NOT replace existing medicines.</strong>
+              </p>
+            </div>
+          </div>
+
+          <!-- Active Medications Cards List -->
+          <div id="patientMedsList" class="medications-list-wrap" style="margin-top:0.75rem; display:flex; flex-direction:column; gap:0.6rem;">
+            <!-- Rendered dynamically by JS -->
+          </div>
+
+          <!-- Add New Medication Form Box -->
+          <div class="add-medication-box" style="margin-top:1rem; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.85rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+              <span class="section-label" style="margin-bottom:0; color:#38bdf8;"><i data-lucide="plus"></i> Add New Medicine to Profile:</span>
+              <span class="badge badge-success" style="font-size:0.68rem;">Won't Overwrite Existing</span>
+            </div>
+            <div class="grid-layout" style="grid-template-columns: 1.2fr 0.8fr 1fr; gap:0.5rem;">
+              <div class="vital-input">
+                <label>Medicine Name *</label>
+                <input type="text" id="newMedName" class="input-field" placeholder="e.g. Medicine C / Augmentin" />
+              </div>
+              <div class="vital-input">
+                <label>Dosage *</label>
+                <input type="text" id="newMedDosage" class="input-field" placeholder="e.g. 500mg / 1 tab" />
+              </div>
+              <div class="vital-input">
+                <label>Frequency *</label>
+                <input type="text" id="newMedFrequency" class="input-field" placeholder="e.g. Twice daily after food" />
+              </div>
+            </div>
+            <div class="grid-layout" style="grid-template-columns: 1fr 1fr 1fr; gap:0.5rem; margin-top:0.5rem;">
+              <div class="vital-input">
+                <label>Start Date</label>
+                <input type="date" id="newMedStartDate" class="input-field" />
+              </div>
+              <div class="vital-input">
+                <label>End Date</label>
+                <input type="text" id="newMedEndDate" class="input-field" placeholder="e.g. Ongoing / 7 days" value="Ongoing" />
+              </div>
+              <div class="vital-input">
+                <label>Special Notes / Instructions</label>
+                <input type="text" id="newMedNotes" class="input-field" placeholder="e.g. Take with warm water" />
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:0.75rem;">
+              <button class="btn btn-primary btn-sm" onclick="addNewMedicationToProfile()">
+                <i data-lucide="plus-circle"></i> Add Medicine (Appends to List)
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.75rem; color:var(--text-muted);"><i data-lucide="check"></i> Data is stored securely and available to verified trauma responders.</span>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-secondary" onclick="closeEditMedicalHistoryModal()">Cancel</button>
+          <button class="btn btn-success" onclick="savePatientMedicalHistory()">
+            <i data-lucide="save"></i> Save Profile Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= UNIFIED 3-PORTAL LOGIN & ROLE SWITCHER MODAL ================= -->
+  <div id="unifiedAuthModal" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title"><i data-lucide="shield-alert"></i> ResQNet 3-Portal Authentication</h3>
+          <p class="card-desc">Instant 1-tap demo switch or enter role credentials to access portal</p>
+        </div>
+        <button class="modal-close" onclick="closeUnifiedAuthModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- 1-Tap Quick Demo Portals -->
+        <div class="demo-portal-grid">
+          <div class="demo-portal-card demo-patient" onclick="quickDemoLogin('patient@demo.com', 'PATIENT')">
+            <div class="portal-icon-box patient-icon"><i data-lucide="user"></i></div>
+            <div class="demo-portal-info">
+              <strong>Patient Portal</strong>
+              <span>patient@demo.com</span>
+              <small>Aarav Sharma &bull; Blood: O- &bull; Digital Health Pass (QR)</small>
+            </div>
+            <span class="badge badge-success">1-Tap Login</span>
+          </div>
+
+          <div class="demo-portal-card demo-doctor" onclick="quickDemoLogin('doctor@demo.com', 'DOCTOR')">
+            <div class="portal-icon-box doctor-icon"><i data-lucide="stethoscope"></i></div>
+            <div class="demo-portal-info">
+              <strong>Doctor Portal</strong>
+              <span>doctor@demo.com</span>
+              <small>Dr. Ananya Dasgupta &bull; Apollo Trauma Surgery Chief</small>
+            </div>
+            <span class="badge badge-primary">1-Tap Login</span>
+          </div>
+
+          <div class="demo-portal-card demo-ambulance" onclick="quickDemoLogin('ambulance@demo.com', 'AMBULANCE')">
+            <div class="portal-icon-box ambulance-icon"><i data-lucide="ambulance"></i></div>
+            <div class="demo-portal-info">
+              <strong>Ambulance EMT Portal</strong>
+              <span>ambulance@demo.com</span>
+              <small>Alpha-1 (WB-01-AB-1234) &bull; Ranjit Das &bull; Green Corridor</small>
+            </div>
+            <span class="badge badge-warning">1-Tap Login</span>
+          </div>
+        </div>
+
+        <div class="auth-divider">
+          <span>or sign in with credentials</span>
+        </div>
+
+        <!-- Custom Login Form -->
+        <form id="unifiedLoginForm" onsubmit="handleUnifiedLogin(event)">
+          <div class="vital-input" style="margin-bottom:0.75rem;">
+            <label>Target Portal Role</label>
+            <select id="authRoleSelect" class="select-filter input-field">
+              <option value="PATIENT">Patient Portal (Citizen SOS, EHR, Meds)</option>
+              <option value="DOCTOR">Doctor Portal (Trauma Bay, On-Call Roster)</option>
+              <option value="AMBULANCE">Ambulance Portal (EMT Navigation, Preemption)</option>
+            </select>
+          </div>
+          <div class="vital-input" style="margin-bottom:0.75rem;">
+            <label>Email Address</label>
+            <input type="email" id="authEmailInput" class="input-field" placeholder="e.g. doctor@demo.com" value="patient@demo.com" required />
+          </div>
+          <div class="vital-input" style="margin-bottom:1rem;">
+            <label>Password</label>
+            <input type="password" id="authPasswordInput" class="input-field" placeholder="Enter password (any for demo)" value="demo123" required />
+          </div>
+          <div id="authAlertBox" class="alert-box hidden" style="margin-bottom:0.75rem;"></div>
+          <button type="submit" class="btn btn-danger btn-block">
+            <i data-lucide="log-in"></i> Authenticate &amp; Launch Portal
+          </button>
+        </form>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.75rem; color:var(--text-muted);">
+          <i data-lucide="lock"></i> Role-based routing verified with FastAPI token.
+        </span>
+        <button class="btn btn-secondary" onclick="closeUnifiedAuthModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

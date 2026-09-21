@@ -1,4 +1,4 @@
-# Raksha ResQNet — Disaster \& Emergency Management System
+# Raksha — Disaster \& Emergency Management System
 
 > \*\*Connecting Patients, Hospitals, Doctors, Ambulances, and City Traffic Signals for Faster, Smarter Emergency Response.\*\*
 
